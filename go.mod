@@ -1,4 +1,4 @@
-module displayImage
+module github.com/hitalos/vil
 
 go 1.18
 
