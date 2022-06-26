@@ -1,10 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
+	"image"
+	"image/png"
 	"os"
 	"strings"
+
+	_ "image/gif"
+	_ "image/jpeg"
 )
 
 const chunkSize = 4096
@@ -41,18 +47,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	showPNG(bs)
+	if err := showImage(bs); err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
+	}
 }
 
-func showPNG(bs []byte) {
+func showImage(bs []byte) error {
 	defer fmt.Println("")
-
 	startChunk := params{"f": "100", "a": "T"}
-	encoded := base64.StdEncoding.EncodeToString(bs)
 
+	buf := bytes.NewBuffer(bs)
+	img, imgType, err := image.Decode(buf)
+	if err != nil {
+		return err
+	}
+
+	if imgType == "png" {
+		buf.Reset()
+		buf.Write(bs)
+	} else {
+		if err := png.Encode(buf, img); err != nil {
+			return err
+		}
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(buf.Bytes())
 	if chunkSize >= len(encoded) {
 		fmt.Print(msg{encoded, startChunk})
-		return
+		return nil
 	}
 
 	startChunk["m"] = "1"
@@ -61,8 +84,10 @@ func showPNG(bs []byte) {
 	for i := chunkSize; i < len(encoded); i += chunkSize {
 		if i+chunkSize >= len(encoded) {
 			fmt.Print(msg{encoded[i:], params{"m": "0"}})
-			return
+			return nil
 		}
 		fmt.Print(msg{encoded[i : i+chunkSize], params{"m": "1"}})
 	}
+
+	return nil
 }
