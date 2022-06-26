@@ -11,6 +11,9 @@ import (
 
 	_ "image/gif"
 	_ "image/jpeg"
+
+	"github.com/mattn/go-tty"
+	"github.com/nfnt/resize"
 )
 
 const chunkSize = 4096
@@ -63,7 +66,23 @@ func showImage(bs []byte) error {
 		return err
 	}
 
-	if imgType == "png" {
+	t, err := tty.Open()
+	if err != nil {
+		return err
+	}
+
+	_, _, w, h, err := t.SizePixel()
+	if err != nil {
+		return err
+	}
+
+	var resized bool
+	if w < img.Bounds().Dx() || h < img.Bounds().Dy() {
+		img = resizeToMax(w, h, img)
+		resized = true
+	}
+
+	if imgType == "png" && !resized {
 		buf.Reset()
 		buf.Write(bs)
 	} else {
@@ -90,4 +109,18 @@ func showImage(bs []byte) error {
 	}
 
 	return nil
+}
+
+func resizeToMax(w, h int, img image.Image) image.Image {
+	x, y := img.Bounds().Dx(), img.Bounds().Dy()
+	if w < x {
+		y = y * (w / x)
+		x = w
+	}
+	if h < y {
+		x = x * (h / y)
+		y = h
+	}
+
+	return resize.Resize(uint(x), uint(y), img, resize.Bilinear)
 }
