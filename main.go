@@ -12,7 +12,7 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 
-	"github.com/mattn/go-tty"
+	"github.com/mattn/go-tty/v2"
 	"github.com/nfnt/resize"
 )
 
