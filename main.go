@@ -12,6 +12,9 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 
+	_ "github.com/gen2brain/heic"
+	_ "github.com/gen2brain/jxl"
+
 	"github.com/mattn/go-tty/v2"
 	"github.com/nfnt/resize"
 )
